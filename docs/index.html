@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RedDot · 把「开始」变成一次点击</title>
+<meta name="description" content="桌面红点，点开是今天的待办，再点一下直达内容。RedDot：Android 桌面悬浮待办，三级结构，精确跳转，13 套主题，纯本地。">
+<meta name="theme-color" content="#0A0909">
+<style>
+  :root{
+    --bg:#0A0909;
+    --ink:#F6F2F0;
+    --sub:#A79D99;
+    --dim:#6E6461;
+    --line:rgba(255,255,255,.09);
+    --card:rgba(255,255,255,.035);
+    --red:#FF3B30;
+    --red-soft:#FF6B52;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:16px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:760px;margin:0 auto;padding:0 22px;}
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;overflow:hidden;
+    padding:64px 0 48px;
+  }
+  .hero::before{
+    content:"";position:absolute;right:-180px;top:-160px;
+    width:460px;height:460px;border-radius:50%;
+    background:radial-gradient(circle at 40% 40%, rgba(255,59,48,.55), rgba(255,59,48,.12) 55%, transparent 72%);
+    filter:blur(6px);pointer-events:none;
+  }
+  .brand{display:flex;align-items:center;gap:10px;position:relative;}
+  .brand .dot{
+    width:14px;height:14px;border-radius:50%;background:var(--red);
+    box-shadow:0 0 0 5px rgba(255,59,48,.14),0 0 22px rgba(255,59,48,.55);
+  }
+  .brand .name{font-size:13px;letter-spacing:.26em;font-weight:700;}
+  .kicker{
+    margin-top:38px;font-size:11px;letter-spacing:.2em;color:var(--red-soft);
+    position:relative;
+  }
+  h1{
+    position:relative;
+    font-size:clamp(34px,9vw,54px);line-height:1.24;
+    letter-spacing:-.02em;font-weight:800;
+    margin:12px 0 18px;
+  }
+  h1 em{font-style:normal;color:var(--red);}
+  .lede{
+    position:relative;color:var(--sub);font-size:clamp(15px,4.2vw,17px);
+    line-height:1.85;margin:0 0 30px;max-width:34em;
+  }
+  .cta{display:flex;flex-wrap:wrap;gap:10px;position:relative;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    height:48px;padding:0 22px;border-radius:12px;
+    font-size:15px;font-weight:700;letter-spacing:.01em;
+    transition:transform .15s ease,background .15s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-main{background:var(--red);color:#fff;box-shadow:0 10px 30px rgba(255,59,48,.25);}
+  .btn-ghost{border:1px solid var(--line);color:var(--ink);background:rgba(255,255,255,.02);}
+  .meta{margin-top:18px;font-size:12.5px;color:var(--dim);letter-spacing:.02em;}
+
+  /* ---------- quote ---------- */
+  .quote{
+    padding:34px 0 6px;border-top:1px solid var(--line);
+    font-size:clamp(19px,5.4vw,25px);line-height:1.6;font-weight:700;
+    letter-spacing:-.01em;
+  }
+  .quote span{color:var(--red);}
+
+  /* ---------- sections ---------- */
+  section{padding:44px 0 0;}
+  .k{font-size:11px;letter-spacing:.2em;color:var(--red-soft);margin-bottom:10px;}
+  h2{
+    font-size:clamp(22px,5.8vw,28px);line-height:1.4;margin:0 0 8px;
+    letter-spacing:-.01em;font-weight:800;
+  }
+  .sub{color:var(--sub);font-size:15px;margin:0 0 24px;max-width:36em;}
+
+  .cards{display:grid;gap:12px;}
+  .card{
+    border:1px solid var(--line);background:var(--card);
+    border-radius:var(--radius);padding:20px 18px;
+  }
+  .card .no{
+    font-size:11px;letter-spacing:.14em;color:var(--red-soft);
+    font-variant-numeric:tabular-nums;margin-bottom:8px;
+  }
+  .card h3{margin:0 0 6px;font-size:17px;letter-spacing:-.01em;}
+  .card p{margin:0;color:var(--sub);font-size:14px;line-height:1.75;}
+
+  /* ---------- 三级 ---------- */
+  .ladder{display:flex;flex-direction:column;gap:8px;margin:22px 0 0;}
+  .rung{
+    display:flex;align-items:baseline;gap:12px;
+    border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+    background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012));
+  }
+  .rung .lv{font-size:10.5px;color:var(--dim);letter-spacing:.14em;flex:none;width:52px;}
+  .rung .txt{font-size:15px;font-weight:700;}
+  .rung .note{font-size:12.5px;color:var(--dim);margin-left:auto;text-align:right;}
+  .arrow{text-align:center;color:#4A4240;font-size:13px;line-height:1;}
+
+  /* ---------- 机制 ---------- */
+  .mech{margin-top:6px;}
+  .m{
+    display:grid;grid-template-columns:28px 1fr;gap:12px;
+    padding:18px 0;border-bottom:1px solid var(--line);
+  }
+  .m:last-child{border-bottom:none;}
+  .m .i{
+    font-size:12px;color:var(--red-soft);font-variant-numeric:tabular-nums;
+    padding-top:2px;letter-spacing:.06em;
+  }
+  .m b{display:block;font-size:16px;margin-bottom:4px;}
+  .m p{margin:0;color:var(--sub);font-size:14px;line-height:1.75;}
+
+  .punch{
+    margin-top:26px;padding:18px 18px;
+    border-left:3px solid var(--red);border-radius:0 12px 12px 0;
+    background:rgba(255,59,48,.07);
+    font-size:15.5px;line-height:1.75;font-weight:700;
+  }
+  .punch span{color:var(--sub);font-weight:400;display:block;margin-top:6px;font-size:13.5px;}
+
+  /* ---------- 步骤 ---------- */
+  .steps{counter-reset:s;margin-top:6px;}
+  .s{
+    display:grid;grid-template-columns:30px 1fr;gap:14px;
+    padding:16px 0;border-bottom:1px solid var(--line);
+  }
+  .s:last-child{border-bottom:none;}
+  .s .n{
+    width:26px;height:26px;border-radius:50%;
+    background:rgba(255,59,48,.14);color:var(--red-soft);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:700;
+  }
+  .s b{display:block;font-size:15.5px;margin-bottom:3px;}
+  .s p{margin:0;color:var(--sub);font-size:13.8px;line-height:1.7;}
+  .tip{
+    margin-top:20px;font-size:13px;color:var(--dim);line-height:1.75;
+    border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:14px 16px;
+  }
+  .tip b{color:var(--sub);}
+
+  /* ---------- 主题 ---------- */
+  .dots{display:flex;flex-wrap:wrap;gap:9px;margin:8px 0 14px;}
+  .dots i{
+    width:26px;height:26px;border-radius:50%;display:block;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .theme-names{color:var(--dim);font-size:12.5px;line-height:1.9;}
+
+  /* ---------- 下载 ---------- */
+  .dl{
+    margin-top:44px;padding:26px 20px;border-radius:20px;
+    background:linear-gradient(160deg,rgba(255,59,48,.14),rgba(255,255,255,.03));
+    border:1px solid rgba(255,59,48,.22);
+  }
+  .dl h2{margin-bottom:6px;}
+  .dl .sub{margin-bottom:20px;}
+  .links{display:flex;flex-wrap:wrap;gap:10px;}
+
+  footer{
+    margin-top:44px;padding:26px 0 44px;border-top:1px solid var(--line);
+    color:var(--dim);font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px 18px;
+    justify-content:space-between;
+  }
+  footer a{color:var(--sub);}
+
+  @media (min-width:680px){
+    .hero{padding:84px 0 56px;}
+    .cards{grid-template-columns:1fr 1fr 1fr;gap:14px;}
+    .ladder{flex-direction:row;align-items:stretch;}
+    .rung{flex:1;flex-direction:column;gap:6px;align-items:flex-start;}
+    .rung .lv{width:auto;}
+    .rung .note{margin-left:0;text-align:left;}
+    .arrow{display:flex;align-items:center;padding:0 2px;transform:rotate(-90deg);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span><span class="name">REDDOT</span></div>
+    <div class="kicker">ANDROID · 纯本地 · 无账号</div>
+    <h1>把「开始」<br>变成<em>一次点击</em></h1>
+    <p class="lede">桌面一个半透明红点。点开是今天要做的事，再点一下，直接落到那个博主主页——不经过搜索，不经过推荐流。</p>
+    <div class="cta">
+      <a class="btn btn-main" href="RedDot.apk" download>下载 APK</a>
+      <a class="btn btn-ghost" href="RedDot-manual.pdf">完整手册 PDF</a>
+    </div>
+    <div class="meta">71 KB · Android 7.0+ · 已在荣耀 90 适配 · 不联网</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="quote">计划失败，通常不是不够努力，<br><span>是入口太远。</span></div>
+
+  <section>
+    <div class="k">01 / 三个设计</div>
+    <h2>它只做三件事</h2>
+    <p class="sub">每一件都对应一个具体的摩擦点，不多做。</p>
+    <div class="cards">
+      <div class="card">
+        <div class="no">01</div>
+        <h3>把入口放在桌上</h3>
+        <p>悬浮红点压在所有应用之上。单击看今天，双击隐身，可拖到拇指顺手的位置。</p>
+      </div>
+      <div class="card">
+        <div class="no">02</div>
+        <h3>把目标拆到能动手</h3>
+        <p>英语学习 → 背 20 个单词 → 博主主页。母级可整组收起，子级挂在某一天。</p>
+      </div>
+      <div class="card">
+        <div class="no">03</div>
+        <h3>把落点定死</h3>
+        <p>绑的是具体那一页，不是「小红书」三个字。点下去就是内容，没有第二个选项。</p>
+      </div>
+    </div>
+
+    <div class="ladder">
+      <div class="rung"><span class="lv">母级</span><span class="txt">英语学习</span><span class="note">方向</span></div>
+      <div class="arrow">↓</div>
+      <div class="rung"><span class="lv">子级</span><span class="txt">背 20 个单词</span><span class="note">今天的动作</span></div>
+      <div class="arrow">↓</div>
+      <div class="rung"><span class="lv">落点</span><span class="txt">博主主页</span><span class="note">点开即达</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="k">02 / 沉浸式学习</div>
+    <h2>为什么这样更容易学进去</h2>
+    <p class="sub">沉浸不是能命令自己进入的状态，它是路径足够短的结果。</p>
+
+    <div class="mech">
+      <div class="m">
+        <div class="i">01</div>
+        <div><b>少四次决定</b><p>学什么、用哪个 App、搜什么词、点哪条——全部提前一晚决定完，白天只执行。</p></div>
+      </div>
+      <div class="m">
+        <div class="i">02</div>
+        <div><b>不给分心的机会</b><p>直达内容页，首页和推荐流根本不出现。不是你抵抗住了诱惑，是诱惑没被端上来。</p></div>
+      </div>
+      <div class="m">
+        <div class="i">03</div>
+        <div><b>靠线索，不靠意志力</b><p>红点位置固定、颜色固定。看到就点，久了会变成条件反射——习惯靠线索启动，不靠决心。</p></div>
+      </div>
+    </div>
+
+    <div class="punch">真正省下的不是 30 秒，是每天三次「要不要开始」的犹豫。
+      <span>它优化的是从「想到」到「已经在看」这一段，不负责你学多久、学得好不好。</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="k">03 / 用起来</div>
+    <h2>四步，之后每天只点一下</h2>
+    <p class="sub">第一次配置约 5 分钟。</p>
+
+    <div class="steps">
+      <div class="s"><div class="n">1</div><div><b>装 APK，开圆点</b><p>允许安装未知来源，打开「在桌面显示圆点」，授予悬浮窗权限。通知权限也建议给，双击隐身后靠它叫回来。</p></div></div>
+      <div class="s"><div class="n">2</div><div><b>建一个母级</b><p>写长期方向，比如「英语学习」。别写成「今天背单词」，那是子级。</p></div></div>
+      <div class="s"><div class="n">3</div><div><b>加一条子级，绑上落点</b><p>「背 20 个单词」，日期选今天，跳转目标用「分享 → 复制链接」拿到博主主页，粘贴进编辑页。</p></div></div>
+      <div class="s"><div class="n">4</div><div><b>之后每天：点红点 → 点一条 → 开始</b><p>做完回来勾掉。晚上花两分钟给明天加一两条，落点提前绑好。</p></div></div>
+    </div>
+
+    <div class="tip"><b>荣耀 / 国产 ROM 注意：</b>只开悬浮窗不够。还要在「应用启动管理」里关掉自动管理、打开自启动与后台活动，电池优化设为不允许，多任务界面加锁——否则圆点会被系统清掉。</div>
+  </section>
+
+  <section>
+    <div class="k">04 / 外观</div>
+    <h2>13 套主题，红点跟着换色</h2>
+    <div class="dots">
+      <i style="background:#FF2D55"></i><i style="background:#22D3EE"></i><i style="background:#A855F7"></i>
+      <i style="background:#34D399"></i><i style="background:#FF71CE"></i><i style="background:#FFD60A"></i>
+      <i style="background:#FFB000"></i><i style="background:#C4F042"></i><i style="background:#38BDF8"></i>
+      <i style="background:#4FC3F7"></i><i style="background:#FF6F91"></i><i style="background:#2A2A2A"></i>
+      <i style="background:#E5342F"></i>
+    </div>
+    <div class="theme-names">霓虹红 · 赛博青 · 暮光紫 · 极光绿 · 蒸汽波 · 警示黄 · 复古琥珀 · 军绿 · 深海 · 蓝图 · 樱花粉 · 墨水屏 · 红白极简</div>
+  </section>
+
+  <div class="dl">
+    <h2>现在就可以开始</h2>
+    <p class="sub">装好、建一条、绑上落点。别的明天再说。</p>
+    <div class="links">
+      <a class="btn btn-main" href="RedDot.apk" download>下载 APK</a>
+      <a class="btn btn-ghost" href="RedDot-manual.pdf">完整手册</a>
+      <a class="btn btn-ghost" href="https://github.com/shixin0816/RedDot">源码</a>
+    </div>
+  </div>
+
+  <footer>
+    <div>数据只存在本机 · 无账号 · 无广告 · 不申请网络权限</div>
+    <div><a href="https://github.com/shixin0816/RedDot">GitHub</a></div>
+  </footer>
+
+</main>
+
+</body>
+</html>

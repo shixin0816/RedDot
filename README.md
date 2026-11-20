@@ -4,6 +4,8 @@
 
 📄 **[《RedDot 沉浸式学习手册》PDF](docs/RedDot-manual.pdf)** — 特色、沉浸式学习的作用、完整用法（11 页）。想先弄懂它为什么有用，看这份就够了。
 
+🌐 **[在线精简版](https://shixin0816.github.io/RedDot/)** — 5 屏看完：三个设计、三条机制、四步上手。手机打开也合适。
+
 📦 **[下载 RedDot.apk](dist/RedDot.apk)** — 约 71 KB，Android 7.0+，debug 签名，可直接安装。
 
 ## 它是什么
