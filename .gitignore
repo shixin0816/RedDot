@@ -1,0 +1,11 @@
+# build artifacts
+build/
+.gradle/
+*.iml
+local.properties
+.DS_Store
+Thumbs.db
+
+# ide
+.idea/
+.vscode/
