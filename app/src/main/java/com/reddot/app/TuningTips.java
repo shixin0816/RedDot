@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 
-/** 国产 ROM 的悬浮窗 / 后台保活引导，荣耀 90（MagicOS）也在内 */
+/** 国产 ROM 的悬浮窗 / 后台保活引导 */
 public class TuningTips {
 
     public static boolean isStrict() {
@@ -25,7 +25,7 @@ public class TuningTips {
     public static void show(final Activity a) {
         StringBuilder sb = new StringBuilder();
         if (isHonor()) {
-            sb.append("你的机型是荣耀 / 华为（MagicOS），系统对悬浮窗和后台管理比较严，按下面四步设置后圆点才不会被清掉：\n\n")
+            sb.append("你的系统对悬浮窗和后台管理比较严，按下面四步设置后圆点才不会被清掉：\n\n")
               .append("1. 悬浮窗权限\n")
               .append("设置 → 应用和服务 → 应用管理 → RedDot → 权限 → 悬浮窗 → 允许\n\n")
               .append("2. 应用启动管理\n")
@@ -42,7 +42,7 @@ public class TuningTips {
         }
 
         new AlertDialog.Builder(a)
-                .setTitle(isHonor() ? "荣耀 90 适配设置" : "机型适配设置")
+                .setTitle("机型适配设置")
                 .setMessage(sb.toString())
                 .setPositiveButton("去应用详情", (d, w) -> {
                     try {

@@ -504,9 +504,7 @@ public class MainActivity extends Activity {
         box.addView(t);
 
         if (TuningTips.isStrict()) {
-            TextView link = Ui.tv(this,
-                    TuningTips.isHonor() ? "荣耀机型：圆点被清掉了？点这里看设置步骤 ›" : "圆点被清掉了？点这里看设置步骤 ›",
-                    11.5f, p.accent, false);
+            TextView link = Ui.tv(this, "圆点被清掉了？点这里看设置步骤 ›", 11.5f, p.accent, false);
             LinearLayout.LayoutParams llp = Ui.lp(LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             llp.topMargin = Ui.dp(this, 10);
@@ -548,7 +546,7 @@ public class MainActivity extends Activity {
             if (!Settings.canDrawOverlays(this)) {
                 String msg = "要在桌面上浮一个圆点，需要授予「显示在其他应用上层」权限。\n\n授权后回到这里，再把开关打开。";
                 if (TuningTips.isHonor()) {
-                    msg = "荣耀 / 华为机型需要在两个地方设置：\n\n"
+                    msg = "部分国产机型需要在两个地方设置：\n\n"
                             + "① 悬浮窗权限：设置 → 应用和服务 → 应用管理 → RedDot → 权限 → 悬浮窗 → 允许\n\n"
                             + "② 应用启动管理：设置 → 应用和服务 → 应用启动管理 → RedDot → 关掉自动管理，三项都打开\n\n"
                             + "只开第一步的话，圆点过一会儿会被系统清掉。";
