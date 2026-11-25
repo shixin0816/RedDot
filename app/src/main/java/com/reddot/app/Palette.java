@@ -224,6 +224,108 @@ public class Palette {
                 .status(0xFF23232B)
                 .danger(0xFFD32F2F)
                 .build());
+
+        // ---------------- 浅色 ----------------
+
+        ALL.add(new B("cream", "奶油白")
+                .t("浅色", "暖白底 + 焦糖橙，白天最省眼")
+                .light()
+                .ac(0xFFC4702A, 0xFFE0894A)
+                .bg(0xFFFDF8F0).ink(0xFF2B231C, 0xFF7A6A5C, 0xFFB3A493)
+                .card(0xFFFFFFFF, 0x1A3A2A10)
+                .input(0xFFF6EDE1, 0x1F3A2A10, 0xFFFFFFFF)
+                .hero(0xFFFFFFFF)
+                .dots(0xFFF3C79A, 0xFFC4702A, 0xFF8A4A12)
+                .status(0xFF3A2A18)
+                .btnInk(0xFFFFFFFF)
+                .danger(0xFFC0392B)
+                .build());
+
+        ALL.add(new B("mint", "薄荷")
+                .t("浅色", "浅薄荷底 + 深绿，清爽不刺眼")
+                .light()
+                .ac(0xFF0B8F63, 0xFF22C08A)
+                .bg(0xFFF2FBF6).ink(0xFF16241E, 0xFF5F7A6E, 0xFF9DB5A8)
+                .card(0xFFFFFFFF, 0x1A0E3A2A)
+                .input(0xFFE9F6EF, 0x1F0E3A2A, 0xFFFFFFFF)
+                .hero(0xFFFFFFFF)
+                .dots(0xFFA7E8CE, 0xFF0B8F63, 0xFF08604F)
+                .status(0xFF1C3A2E)
+                .btnInk(0xFFFFFFFF)
+                .danger(0xFFC2410C)
+                .build());
+
+        ALL.add(new B("mist", "雾蓝")
+                .t("浅色", "灰蓝底 + 皇家蓝，冷静的工作色")
+                .light()
+                .ac(0xFF2563EB, 0xFF3B82F6)
+                .bg(0xFFF4F7FC).ink(0xFF161C2B, 0xFF5D6B85, 0xFF9AA8C0)
+                .card(0xFFFFFFFF, 0x1A16264A)
+                .input(0xFFEAF0FA, 0x1F16264A, 0xFFFFFFFF)
+                .hero(0xFFFFFFFF)
+                .dots(0xFFA9C4F5, 0xFF2563EB, 0xFF123A7A)
+                .status(0xFF1B2438)
+                .btnInk(0xFFFFFFFF)
+                .danger(0xFFDC2626)
+                .build());
+
+        ALL.add(new B("clay", "豆沙")
+                .t("浅色", "米杏底 + 陶土红，柔和的纸感")
+                .light()
+                .ac(0xFFA8452F, 0xFFC96A4E)
+                .bg(0xFFFAF3EF).ink(0xFF2A201C, 0xFF7A6459, 0xFFB5A096)
+                .card(0xFFFFFFFF, 0x1A3A2018)
+                .input(0xFFF5E9E2, 0x1F3A2018, 0xFFFFFFFF)
+                .hero(0xFFFFFFFF)
+                .dots(0xFFE8BFAB, 0xFFA8452F, 0xFF6E2C1E)
+                .status(0xFF3A2A22)
+                .btnInk(0xFFFFFFFF)
+                .danger(0xFFB91C1C)
+                .build());
+
+        // ---------------- 撞色 ----------------
+
+        ALL.add(new B("klein", "克莱因蓝 × 橙")
+                .t("撞色", "蓝底按钮配橙标，对比拉满")
+                .light()
+                .ac(0xFF2440D8, 0xFFFF6B1A)
+                .bg(0xFFF7F8FF).ink(0xFF12142B, 0xFF5A5F80, 0xFF9BA0BE)
+                .card(0xFFFFFFFF, 0x1A1A2B6A)
+                .input(0xFFEEF0FF, 0x1F1A2B6A, 0xFFFFFFFF)
+                .hero(0xFFFFFFFF)
+                .dots(0xFFFFB27A, 0xFF2440D8, 0xFF16309E)
+                .status(0xFF171A3A)
+                .btnInk(0xFFFFFFFF)
+                .danger(0xFFD92D20)
+                .build());
+
+        ALL.add(new B("clash", "玫红 × 薄荷")
+                .t("撞色", "红绿互补，跳但看得清")
+                .light()
+                .ac(0xFFD21845, 0xFF10B981)
+                .bg(0xFFFBF7F7).ink(0xFF1E1418, 0xFF6E5560, 0xFFAC98A2)
+                .card(0xFFFFFFFF, 0x1A3A1620)
+                .input(0xFFF7ECEF, 0x1F3A1620, 0xFFFFFFFF)
+                .hero(0xFFFFFFFF)
+                .dots(0xFF7DD3B0, 0xFFD21845, 0xFF8A1030)
+                .status(0xFF2A1620)
+                .btnInk(0xFFFFFFFF)
+                .danger(0xFFB91C1C)
+                .build());
+
+        ALL.add(new B("citrus", "柠檬紫")
+                .t("撞色", "紫配琥珀，浅底也够精神")
+                .light()
+                .ac(0xFF6D28D9, 0xFFF59E0B)
+                .bg(0xFFFCFAF2).ink(0xFF221C2E, 0xFF6A607A, 0xFFA79CB8)
+                .card(0xFFFFFFFF, 0x1A2E1F4A)
+                .input(0xFFF6F1FF, 0x1F2E1F4A, 0xFFFFFFFF)
+                .hero(0xFFFFFFFF)
+                .dots(0xFFF7D08A, 0xFF6D28D9, 0xFF44188F)
+                .status(0xFF2A2140)
+                .btnInk(0xFFFFFFFF)
+                .danger(0xFFDC2626)
+                .build());
     }
 
     private static class B {
@@ -341,21 +443,71 @@ public class Palette {
     // ---------------- 读写 ----------------
 
     public static final String K_THEME = "theme";
+    private static final String K_RECENT = "recent_themes";
+    private static final int RECENT_MAX = 5;
 
     public static List<Palette> all() {
         return ALL;
     }
 
-    public static Palette byId(String id) {
+    public static Palette byIdOrNull(String id) {
+        if (id == null) return null;
         for (Palette p : ALL) if (p.id.equals(id)) return p;
-        return ALL.get(0);
+        return null;
+    }
+
+    public static Palette byId(String id) {
+        Palette p = byIdOrNull(id);
+        return p != null ? p : byIdOrNull("cream");
     }
 
     public static Palette get(Context c) {
-        return byId(TodoStore.sp(c).getString(K_THEME, "neon"));
+        return byId(TodoStore.sp(c).getString(K_THEME, "cream"));
     }
 
     public static void set(Context c, String id) {
         TodoStore.sp(c).edit().putString(K_THEME, id).apply();
+        touchRecent(c, id);
+    }
+
+    private static void touchRecent(Context c, String id) {
+        List<String> list = recentIds(c);
+        list.remove(id);
+        list.add(0, id);
+        while (list.size() > RECENT_MAX) list.remove(list.size() - 1);
+        StringBuilder sb = new StringBuilder();
+        for (String s : list) {
+            if (sb.length() > 0) sb.append(',');
+            sb.append(s);
+        }
+        TodoStore.sp(c).edit().putString(K_RECENT, sb.toString()).apply();
+    }
+
+    public static List<String> recentIds(Context c) {
+        List<String> out = new ArrayList<>();
+        String raw = TodoStore.sp(c).getString(K_RECENT, "");
+        if (raw == null || raw.length() == 0) return out;
+        for (String s : raw.split(",")) {
+            if (s.length() > 0 && byIdOrNull(s) != null && !out.contains(s)) out.add(s);
+        }
+        return out;
+    }
+
+    /** 当前主题 → 最近用过 → 没用过的浅色 → 没用过的深色 */
+    public static List<Palette> allSorted(Context c) {
+        List<Palette> out = new ArrayList<>();
+        Palette cur = get(c);
+        if (cur != null) out.add(cur);
+        for (String id : recentIds(c)) {
+            Palette p = byIdOrNull(id);
+            if (p != null && !out.contains(p)) out.add(p);
+        }
+        for (Palette p : ALL) {
+            if (p.light && !out.contains(p)) out.add(p);
+        }
+        for (Palette p : ALL) {
+            if (!p.light && !out.contains(p)) out.add(p);
+        }
+        return out;
     }
 }

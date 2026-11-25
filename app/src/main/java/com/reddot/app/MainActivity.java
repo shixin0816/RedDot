@@ -2,6 +2,8 @@ package com.reddot.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -33,6 +35,26 @@ public class MainActivity extends Activity {
     private Palette p;
     private String dayKey;
     private boolean overlayOn;
+    private ScrollView scrollRef;
+
+    // 计时刷新：只更新文字，不重建页面，避免列表跳回顶部
+    private final android.os.Handler ticker =
+            new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Map<Long, TextView> timerViews = new java.util.HashMap<>();
+    private final Map<Long, Todo> liveTodos = new java.util.HashMap<>();
+    private boolean ticking;
+
+    private final Runnable tickRun = new Runnable() {
+        @Override
+        public void run() {
+            for (Map.Entry<Long, TextView> e : timerViews.entrySet()) {
+                Todo t = liveTodos.get(e.getKey());
+                if (t == null) continue;
+                e.getValue().setText(timerText(t));
+            }
+            ticker.postDelayed(this, 1000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +83,39 @@ public class MainActivity extends Activity {
         } else if (overlayOn) {
             startOverlay(OverlayService.CMD_NORMAL);
         }
+        startTicker();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopTicker();
+    }
+
+    private void startTicker() {
+        if (ticking) return;
+        ticking = true;
+        ticker.postDelayed(tickRun, 1000);
+    }
+
+    private void stopTicker() {
+        ticking = false;
+        ticker.removeCallbacks(tickRun);
+    }
+
+    private String timerText(Todo t) {
+        if (t.runningSince > 0) return "⏸ " + Todo.hms(t.liveSec());
+        if (t.spentSec > 0) return "▶ " + Todo.hms(t.spentSec);
+        return "⏱ 开始";
     }
 
     // ---------------- 界面 ----------------
 
     private void refresh() {
         p = Palette.get(this);
+        timerViews.clear();
+        liveTodos.clear();
+        final int keepY = scrollRef == null ? 0 : scrollRef.getScrollY();
         overlayOn = TodoStore.sp(this).getBoolean(TodoStore.K_ENABLED, true)
                 && Settings.canDrawOverlays(this);
         applyStatusBar();
@@ -78,6 +127,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(p.bg);
 
         root.addView(hero());
+        root.addView(statsEntry());
         root.addView(themeEntry());
         root.addView(dateBar());
         root.addView(addButton());
@@ -86,7 +136,16 @@ public class MainActivity extends Activity {
 
         sv.addView(root, Ui.lp(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
+        scrollRef = sv;
         setContentView(sv);
+        if (keepY > 0) {
+            sv.post(new Runnable() {
+                @Override
+                public void run() {
+                    sv.scrollTo(0, keepY);
+                }
+            });
+        }
     }
 
     private void applyStatusBar() {
@@ -196,6 +255,50 @@ public class MainActivity extends Activity {
             }
         });
         return holder;
+    }
+
+    /** 主页的「完成情况」入口，顺带显示今日进度与连续天数 */
+    private View statsEntry() {
+        LinearLayout row = Ui.row(this);
+        row.setBackground(Ui.stroke(this, p.card, p.cardStroke, 1, 18));
+        Ui.pad(row, this, 16, 14, 16, 14);
+
+        LinearLayout icon = Ui.row(this);
+        icon.setGravity(Gravity.BOTTOM);
+        int[] hs = {10, 16, 23};
+        for (int h : hs) {
+            View b = new View(this);
+            b.setBackground(Ui.grad(this, p.accent, p.accent2, 2));
+            LinearLayout.LayoutParams blp = Ui.lp(Ui.dp(this, 5), Ui.dp(this, h));
+            blp.rightMargin = Ui.dp(this, 3);
+            icon.addView(b, blp);
+        }
+        row.addView(icon, Ui.lp(Ui.dp(this, 38), Ui.dp(this, 38)));
+
+        LinearLayout col = Ui.col(this);
+        row.addView(col, Ui.lp(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+        Ui.margin(col, this, 12, 0, 0, 0);
+        col.addView(Ui.tv(this, "完成情况", 14, p.ink, true));
+
+        int[] pr = TodoStore.todayProgress(this);
+        col.addView(Ui.tv(this, "今日 " + pr[0] + "/" + pr[1]
+                + " · 连续 " + TodoStore.streakDays(this) + " 天", 11.5f, p.sub, false));
+
+        row.addView(Ui.tv(this, "›", 18, p.hint, false));
+        row.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, StatsActivity.class));
+            }
+        });
+
+        LinearLayout.LayoutParams lp = Ui.lp(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.leftMargin = Ui.dp(this, 20);
+        lp.rightMargin = Ui.dp(this, 20);
+        lp.topMargin = Ui.dp(this, 14);
+        row.setLayoutParams(lp);
+        return row;
     }
 
     private View themeEntry() {
@@ -445,6 +548,8 @@ public class MainActivity extends Activity {
         Ui.margin(col, this, 11, 0, 0, 0);
 
         String label = TextUtils.isEmpty(t.l2) ? "（没填子级）" : t.l2;
+        if (t.repeat == Todo.REPEAT_DAILY) label = label + "  · 每天";
+        else if (t.repeat == Todo.REPEAT_LONG) label = label + "  · 长期";
         TextView title = Ui.tv(this, label, 14.5f, t.done ? p.hint : p.ink, false);
         if (t.done) {
             title.setPaintFlags(title.getPaintFlags()
@@ -470,10 +575,43 @@ public class MainActivity extends Activity {
             col.addView(none, clp);
         }
 
+        // 计时按钮：点一下开始，再点一下停，运行中每秒刷新
+        final TextView timer = Ui.tv(this, timerText(t), 10.5f,
+                t.runningSince > 0 ? p.accent : p.hint, false);
+        timer.setGravity(Gravity.CENTER);
+        timer.setMinWidth(Ui.dp(this, 48));
+        timer.setBackground(Ui.stroke(this,
+                t.runningSince > 0 ? p.accentSoft(0x22) : p.soft,
+                t.runningSince > 0 ? p.accentSoft(0x3D) : p.softLine, 1, 9));
+        Ui.pad(timer, this, 7, 5, 7, 5);
+        LinearLayout.LayoutParams tlp = Ui.lp(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        tlp.leftMargin = Ui.dp(this, 4);
+        row.addView(timer, tlp);
+        timerViews.put(t.id, timer);
+        liveTodos.put(t.id, t);
+        timer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TodoStore.toggleTimer(MainActivity.this, t.id);
+                Todo latest = TodoStore.get(MainActivity.this, t.id);
+                if (latest != null) {
+                    t.runningSince = latest.runningSince;
+                    t.spentSec = latest.spentSec;
+                }
+                boolean run = t.runningSince > 0;
+                timer.setText(timerText(t));
+                timer.setTextColor(run ? p.accent : p.hint);
+                timer.setBackground(Ui.stroke(MainActivity.this,
+                        run ? p.accentSoft(0x22) : p.soft,
+                        run ? p.accentSoft(0x3D) : p.softLine, 1, 9));
+            }
+        });
+
         check.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TodoStore.toggleDone(MainActivity.this, t.id);
+                TodoStore.toggleDone(MainActivity.this, t.id, dayKey);
                 refresh();
             }
         });
@@ -488,7 +626,7 @@ public class MainActivity extends Activity {
         row.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                confirmDelete(t);
+                showItemMenu(t);
                 return true;
             }
         });
@@ -498,7 +636,7 @@ public class MainActivity extends Activity {
     private View tip() {
         LinearLayout box = Ui.col(this);
         TextView t = Ui.tv(this,
-                "点母级标题展开 / 收起，右侧 ＋ 直接给这一组加子级。\n点 ○ 标记完成 · 右上角调色盘换主题 · 点日期回到今天。",
+                "点 ○ 标记完成 · 点 ⏱ 开始计时 · 长按一条可复制 / 删除\n母级标题可展开收起，右侧 ＋ 给这组加子级 · 右上角换主题",
                 11, p.hint, false);
         t.setLineSpacing(Ui.dp(this, 4), 1f);
         box.addView(t);
@@ -582,6 +720,39 @@ public class MainActivity extends Activity {
             toast("圆点已关闭");
         }
         refresh();
+    }
+
+    /** 长按一条任务：复制文本 / 复制链接 / 编辑 / 删除 */
+    private void showItemMenu(final Todo t) {
+        final String[] items = {"复制任务文本", "复制跳转链接", "编辑这条", "删除"};
+        new AlertDialog.Builder(this)
+                .setTitle(TextUtils.isEmpty(t.l2) ? t.l1 : t.l2)
+                .setItems(items, (d, which) -> {
+                    if (which == 0) {
+                        copyText(t.copyText());
+                    } else if (which == 1) {
+                        if (!TextUtils.isEmpty(t.targetUrl)) copyText(t.targetUrl);
+                        else if (!TextUtils.isEmpty(t.targetPackage)) copyText(t.targetPackage);
+                        else toast("这条还没设置跳转链接");
+                    } else if (which == 2) {
+                        Intent i = new Intent(MainActivity.this, EditActivity.class);
+                        i.putExtra("todo_id", t.id);
+                        startActivity(i);
+                    } else {
+                        confirmDelete(t);
+                    }
+                })
+                .show();
+    }
+
+    private void copyText(String s) {
+        if (TextUtils.isEmpty(s)) {
+            toast("没有可复制的内容");
+            return;
+        }
+        ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (cm != null) cm.setPrimaryClip(ClipData.newPlainText("RedDot", s));
+        toast("已复制");
     }
 
     private void confirmDelete(final Todo t) {

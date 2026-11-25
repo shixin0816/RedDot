@@ -46,6 +46,11 @@ public class EditActivity extends Activity {
     private TextView[] dayChips = new TextView[3];
     private LinearLayout chipsRow;
 
+    private int repeatValue = Todo.REPEAT_NONE;
+    private TextView[] repeatChips = new TextView[3];
+    private LinearLayout dayPickerRow;
+    private TextView repeatHint;
+
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -63,6 +68,7 @@ public class EditActivity extends Activity {
         }
         if (TextUtils.isEmpty(todo.date)) dateKeyValue = TodoStore.todayKey();
         else dateKeyValue = todo.date;
+        repeatValue = todo.repeat;
 
         build();
     }
@@ -141,7 +147,7 @@ public class EditActivity extends Activity {
 
         root.addView(nav());
         root.addView(fieldsCard());
-        root.addView(dateCard());
+        root.addView(repeatCard());
         root.addView(targetCard());
         root.addView(saveButton());
 
@@ -299,9 +305,9 @@ public class EditActivity extends Activity {
         }
     }
 
-    private View dateCard() {
+    private View repeatCard() {
         LinearLayout c = card();
-        c.addView(Ui.tv(this, "日期", 15, p.ink, true));
+        c.addView(Ui.tv(this, "重复", 15, p.ink, true));
 
         LinearLayout row = Ui.row(this);
         LinearLayout.LayoutParams rlp = Ui.lp(LinearLayout.LayoutParams.MATCH_PARENT,
@@ -309,15 +315,41 @@ public class EditActivity extends Activity {
         rlp.topMargin = Ui.dp(this, 10);
         c.addView(row, rlp);
 
-        String[] labels = {"今天", "明天", "后天"};
+        String[] labels = {"单次", "每天", "长期"};
+        for (int i = 0; i < 3; i++) {
+            final int v = i;
+            TextView chip = Ui.tv(this, labels[i], 13, p.sub, false);
+            chip.setGravity(Gravity.CENTER);
+            Ui.pad(chip, this, 10, 8, 10, 8);
+            LinearLayout.LayoutParams lp = Ui.lp(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+            if (i > 0) lp.leftMargin = Ui.dp(this, 8);
+            row.addView(chip, lp);
+            repeatChips[i] = chip;
+            chip.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v2) {
+                    repeatValue = v;
+                    updateRepeatUi();
+                }
+            });
+        }
+
+        // 只有「单次」需要选具体哪一天
+        dayPickerRow = Ui.row(this);
+        LinearLayout.LayoutParams dlp = Ui.lp(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        dlp.topMargin = Ui.dp(this, 12);
+        c.addView(dayPickerRow, dlp);
+
+        String[] dayLabels = {"今天", "明天", "后天"};
         for (int i = 0; i < 3; i++) {
             final int off = i;
-            final TextView chip = Ui.tv(this, labels[i], 13, p.sub, false);
+            TextView chip = Ui.tv(this, dayLabels[i], 13, p.sub, false);
             Ui.pad(chip, this, 14, 8, 14, 8);
             LinearLayout.LayoutParams lp = Ui.lp(LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             lp.rightMargin = Ui.dp(this, 8);
-            row.addView(chip, lp);
+            dayPickerRow.addView(chip, lp);
             dayChips[i] = chip;
             chip.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -332,7 +364,7 @@ public class EditActivity extends Activity {
         dateButton.setGravity(Gravity.CENTER);
         dateButton.setBackground(Ui.stroke(this, p.input, p.inputStroke, 1, 10));
         Ui.pad(dateButton, this, 10, 9, 10, 9);
-        row.addView(dateButton, Ui.lp(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+        dayPickerRow.addView(dateButton, Ui.lp(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
         dateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -340,8 +372,40 @@ public class EditActivity extends Activity {
             }
         });
 
-        updateDateUi();
+        repeatHint = Ui.tv(this, "", 11.5f, p.hint, false);
+        repeatHint.setLineSpacing(Ui.dp(this, 3), 1f);
+        LinearLayout.LayoutParams hlp = Ui.lp(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        hlp.topMargin = Ui.dp(this, 12);
+        c.addView(repeatHint, hlp);
+
+        updateRepeatUi();
         return c;
+    }
+
+    private void updateRepeatUi() {
+        for (int i = 0; i < 3; i++) {
+            TextView chip = repeatChips[i];
+            if (chip == null) continue;
+            boolean on = repeatValue == i;
+            chip.setTextColor(on ? p.btnInk : p.sub);
+            chip.setBackground(on
+                    ? Ui.grad(this, p.accent, p.accent2, 10)
+                    : Ui.stroke(this, p.soft, p.softLine, 1, 10));
+        }
+        if (dayPickerRow != null) {
+            dayPickerRow.setVisibility(repeatValue == Todo.REPEAT_NONE ? View.VISIBLE : View.GONE);
+        }
+        if (repeatHint != null) {
+            if (repeatValue == Todo.REPEAT_DAILY) {
+                repeatHint.setText("每天都出现在今日待办里，完成按天单独记录。链接只绑一次，第二天不用重新粘贴。");
+            } else if (repeatValue == Todo.REPEAT_LONG) {
+                repeatHint.setText("一直留在列表里，勾选后保持完成，直到你手动取消。适合「整理错题本」这类持续项目。");
+            } else {
+                repeatHint.setText("只在选中的这一天出现。");
+            }
+        }
+        updateDateUi();
     }
 
     private void updateDateUi() {
@@ -547,6 +611,7 @@ public class EditActivity extends Activity {
         todo.l1 = l1;
         todo.l2 = l2;
         todo.date = dateKeyValue;
+        todo.repeat = repeatValue;
         TodoStore.save(this, todo);
         return true;
     }

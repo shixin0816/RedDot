@@ -36,6 +36,10 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".StatsActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".CaptureActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:excludeFromRecents="true"

@@ -37,8 +37,7 @@ public class ThemeDialog {
         head.addView(h, Ui.lp(LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         Ui.margin(h, ctx, 8, 0, 0, 0);
-        TextView count = Ui.tv(ctx, Palette.all().size() + " 套", 11, cur.hint, false);
-        head.addView(count, Ui.lp(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+        TextView count = Ui.tv(ctx, Palette.all().size() + " 套", 11, cur.hint, false);        head.addView(count, Ui.lp(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
         head.setGravity(Gravity.CENTER_VERTICAL);
         Ui.pad(head, ctx, 4, 4, 4, 12);
         sheet.addView(head);
@@ -48,7 +47,8 @@ public class ThemeDialog {
         sv.addView(list, Ui.lp(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        for (final Palette p : Palette.all()) {
+        final java.util.List<String> recent = Palette.recentIds(ctx);
+        for (final Palette p : Palette.allSorted(ctx)) {
             boolean on = p.id.equals(cur.id);
             LinearLayout row = Ui.row(ctx);
             row.setBackground(Ui.stroke(ctx,
@@ -63,7 +63,9 @@ public class ThemeDialog {
             LinearLayout texts = Ui.col(ctx);
             row.addView(texts, Ui.lp(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
             Ui.margin(texts, ctx, 12, 0, 0, 0);
-            TextView n = Ui.tv(ctx, p.label(), 14.5f, cur.ink, true);
+            TextView n = Ui.tv(ctx,
+                    p.label() + (on ? " · 使用中" : (recent.contains(p.id) ? " · 最近" : "")),
+                    14.5f, cur.ink, true);
             texts.addView(n);
             TextView ds = Ui.tv(ctx, p.desc, 11.5f, cur.sub, false);
             texts.addView(ds);
@@ -93,7 +95,8 @@ public class ThemeDialog {
         sheet.addView(sv, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 Ui.dp(ctx, 424)));
 
-        TextView hint = Ui.tv(ctx, "共 " + Palette.all().size() + " 套 · 上下滑动查看", 11, cur.hint, false);
+        TextView hint = Ui.tv(ctx,
+                "共 " + Palette.all().size() + " 套 · 最近用过的在前，浅色优先", 11, cur.hint, false);
         hint.setGravity(Gravity.CENTER);
         Ui.pad(hint, ctx, 0, 9, 0, 0);
         sheet.addView(hint);

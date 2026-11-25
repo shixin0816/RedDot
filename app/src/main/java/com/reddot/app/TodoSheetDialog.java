@@ -29,6 +29,22 @@ public class TodoSheetDialog {
         final List<Todo> todos = TodoStore.getTodos(ctx, TodoStore.todayKey());
         final Dialog[] holder = new Dialog[1];
 
+        // 计时：弹层里开始后每秒更新，关掉弹层就停
+        final android.os.Handler ticker =
+                new android.os.Handler(android.os.Looper.getMainLooper());
+        final Map<Long, TextView> timerViews = new java.util.HashMap<>();
+        final Map<Long, Todo> liveTodos = new java.util.HashMap<>();
+        final Runnable tick = new Runnable() {
+            @Override
+            public void run() {
+                for (Map.Entry<Long, TextView> en : timerViews.entrySet()) {
+                    Todo t = liveTodos.get(en.getKey());
+                    if (t != null) en.getValue().setText(timerText(t));
+                }
+                ticker.postDelayed(this, 1000);
+            }
+        };
+
         LinearLayout sheet = Ui.col(ctx);
         sheet.setBackground(Ui.gradCornerTop(ctx, p.sheet, p.sheet, 24));
         Ui.pad(sheet, ctx, 16, 10, 16, 22);
@@ -54,6 +70,12 @@ public class TodoSheetDialog {
         meta.setGravity(Gravity.END);
         Ui.pad(head, ctx, 4, 0, 4, 12);
         sheet.addView(head);
+
+        if (!todos.isEmpty()) {
+            TextView hint2 = Ui.tv(ctx, "点 ○ 直接完成 · 长按复制 · 右侧计时", 10.5f, p.hint, false);
+            Ui.pad(hint2, ctx, 6, 0, 6, 8);
+            sheet.addView(hint2);
+        }
 
         ScrollView sv = new ScrollView(ctx);
         LinearLayout body = Ui.col(ctx);
@@ -102,7 +124,7 @@ public class TodoSheetDialog {
                     item.setBackground(Ui.stroke(ctx, p.card, p.cardStroke, 1, 14));
                     Ui.pad(item, ctx, 12, 11, 12, 11);
 
-                    TextView check = Ui.tv(ctx, t.done ? "✓" : "○", 14,
+                    final TextView check = Ui.tv(ctx, t.done ? "✓" : "○", 14,
                             t.done ? p.hint : p.accent, false);
                     check.setGravity(Gravity.CENTER);
                     check.setBackground(Ui.oval(ctx, Color.TRANSPARENT, p.softLine, 1));
@@ -113,7 +135,9 @@ public class TodoSheetDialog {
                     Ui.margin(col, ctx, 11, 0, 0, 0);
 
                     String label = TextUtils.isEmpty(t.l2) ? e.getKey() : t.l2;
-                    TextView nm = Ui.tv(ctx, label, 14.5f, p.ink, false);
+                    if (t.repeat == Todo.REPEAT_DAILY) label = label + "  · 每天";
+                    else if (t.repeat == Todo.REPEAT_LONG) label = label + "  · 长期";
+                    final TextView nm = Ui.tv(ctx, label, 14.5f, p.ink, false);
                     if (t.done) {
                         nm.setPaintFlags(nm.getPaintFlags()
                                 | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
@@ -133,6 +157,63 @@ public class TodoSheetDialog {
                         col.addView(chip, clp);
                     }
 
+                    // 计时：不用回 App 也能开始 / 暂停
+                    final TextView timer = Ui.tv(ctx, timerText(t), 10.5f,
+                            t.runningSince > 0 ? p.accent : p.hint, false);
+                    timer.setGravity(Gravity.CENTER);
+                    timer.setMinWidth(Ui.dp(ctx, 48));
+                    timer.setBackground(Ui.stroke(ctx,
+                            t.runningSince > 0 ? p.accentSoft(0x22) : p.soft,
+                            t.runningSince > 0 ? p.accentSoft(0x3D) : p.softLine, 1, 9));
+                    Ui.pad(timer, ctx, 7, 5, 7, 5);
+                    LinearLayout.LayoutParams tlp = Ui.lp(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    tlp.leftMargin = Ui.dp(ctx, 4);
+                    item.addView(timer, tlp);
+                    timerViews.put(t.id, timer);
+                    liveTodos.put(t.id, t);
+                    timer.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            TodoStore.toggleTimer(ctx, t.id);
+                            Todo latest = TodoStore.get(ctx, t.id);
+                            if (latest != null) {
+                                t.runningSince = latest.runningSince;
+                                t.spentSec = latest.spentSec;
+                            }
+                            boolean run = t.runningSince > 0;
+                            timer.setText(timerText(t));
+                            timer.setTextColor(run ? p.accent : p.hint);
+                            timer.setBackground(Ui.stroke(ctx,
+                                    run ? p.accentSoft(0x22) : p.soft,
+                                    run ? p.accentSoft(0x3D) : p.softLine, 1, 9));
+                        }
+                    });
+
+                    // 点 ○ 直接完成，不用回 App
+                    check.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            TodoStore.toggleDone(ctx, t.id, TodoStore.todayKey());
+                            t.done = !t.done;
+                            check.setText(t.done ? "✓" : "○");
+                            check.setTextColor(t.done ? p.hint : p.accent);
+                            if (t.done) {
+                                nm.setPaintFlags(nm.getPaintFlags()
+                                        | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+                                nm.setTextColor(p.hint);
+                            } else {
+                                nm.setPaintFlags(nm.getPaintFlags()
+                                        & ~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+                                nm.setTextColor(p.ink);
+                            }
+                            int leftN = 0;
+                            for (Todo x : todos) if (!x.done) leftN++;
+                            meta.setText("今天 · " + leftN + " 项");
+                        }
+                    });
+
                     item.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -143,6 +224,21 @@ public class TodoSheetDialog {
                                 Toast.makeText(ctx, "这条待办还没设置跳转目标",
                                         Toast.LENGTH_SHORT).show();
                             }
+                        }
+                    });
+
+                    item.setOnLongClickListener(new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View v) {
+                            android.content.ClipboardManager cm =
+                                    (android.content.ClipboardManager)
+                                            ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+                            if (cm != null) {
+                                cm.setPrimaryClip(android.content.ClipData.newPlainText(
+                                        "RedDot", t.copyText()));
+                            }
+                            Toast.makeText(ctx, "已复制这条任务", Toast.LENGTH_SHORT).show();
+                            return true;
                         }
                     });
 
@@ -208,9 +304,22 @@ public class TodoSheetDialog {
             w.setGravity(Gravity.BOTTOM);
         }
         dlg.show();
+        ticker.postDelayed(tick, 1000);
+        dlg.setOnDismissListener(new android.content.DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(android.content.DialogInterface d) {
+                ticker.removeCallbacks(tick);
+            }
+        });
         if (w != null) {
             DisplayMetrics dm = ctx.getResources().getDisplayMetrics();
             w.setLayout(dm.widthPixels, WindowManager.LayoutParams.WRAP_CONTENT);
         }
+    }
+
+    private static String timerText(Todo t) {
+        if (t.runningSince > 0) return "⏸ " + Todo.hms(t.liveSec());
+        if (t.spentSec > 0) return "▶ " + Todo.hms(t.spentSec);
+        return "⏱ 开始";
     }
 }
